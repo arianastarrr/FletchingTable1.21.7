@@ -46,6 +46,8 @@ dependencies {
 }
 ```
 
+[List of available fungible version tags](https://github.com/magistermaks/mod-fungible/tags)
+
 ### Settings
 Fletching Table's default settings can be changed in an extension named `fletchingTable` as follows:
 ```groovy
