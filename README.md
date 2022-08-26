@@ -1,7 +1,7 @@
 # Fletching Table
 Additions and automations for [fabric-loom](https://github.com/FabricMC/fabric-loom)
 
-## This project is still experimental, use at your own risk or wait a little so I can polish it :)
+## This project is still experimental, use at your own risk.
 
 ## Features
 ### Entrypoints
@@ -34,18 +34,17 @@ dependencies {
 }
 ```
 
-### Shut Up Drasil
-Mutes the stacktrace from the authentication exception while in the development environment.
+### Fungible
+Adds a shortcut to add [Fungible by magistermaks](https://github.com/magistermaks/mod-fungible) to the development environment.
 
-To use, add `fletchingTable.shutUpDrasil18()` in the dependencies block.
+To use, add `fletchingTable.fungible "<RELEASE TAG>"` in the dependencies block with the release tag of the version of fungible you want to add.<br>
+Example for [fungible v1.2 for minecraft 1.19.2](https://github.com/magistermaks/mod-fungible/releases/tag/1.2%2Bmc1.19.2):
 ```groovy
 dependencies {
     ..
-    fletchingTable.shutUpDrasil18()
+    fletchingTable.fungible "1.2+mc1.19.2"
 }
 ```
-
-**Note**: Shut Up Drasil was only tested with 1.18, it might work on other versions and it might not, better support is planned eventually.
 
 ### Settings
 Fletching Table's default settings can be changed in an extension named `fletchingTable` as follows:
@@ -72,7 +71,7 @@ Add the plugin by applying it <ins>**after loom**</ins>.
 ```patch
 plugins {
     id 'fabric-loom' ...
-+   id "io.shcm.shsupercm.fabric.fletchingtable" version "1.4"
++   id "io.shcm.shsupercm.fabric.fletchingtable" version "1.5"
 }
 ```
 
