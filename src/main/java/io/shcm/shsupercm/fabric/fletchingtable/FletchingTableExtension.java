@@ -4,7 +4,6 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.compile.JavaCompile;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -64,13 +63,5 @@ public abstract class FletchingTableExtension {
         compilerArgs.add("-Afletchingtable.mixins.default=" + getDefaultMixinEnvironment().get());
         compilerArgs.add("-Afletchingtable.mixins.prefix.client=" + getAutoMixinEnvironmentClientPrefix().get());
         compilerArgs.add("-Afletchingtable.mixins.prefix.server=" + getAutoMixinEnvironmentServerPrefix().get());
-    }
-
-    /**
-     * Makes the Yggdrasil exception not print out a stacktrace.<br>
-     * Note that this was only tested with 1.18, it might work for other versions but it might not.
-     */
-    public void shutUpDrasil18() {
-        project.getDependencies().add("modRuntimeOnly", project.files(new File(project.getProjectDir(), ".gradle/fletchingtable/jars/fletchingtable-shutupdrasil-1.18.jar")));
     }
 }

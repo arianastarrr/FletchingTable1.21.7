@@ -31,7 +31,7 @@ public class FTGradlePlugin implements Plugin<Project> {
 
         jarsDir = new File(project.getProjectDir(), ".gradle/fletchingtable/jars");
         jarsDir.mkdirs();
-        for (String name : new String[] { "api.jar", "shutupdrasil-1.18.jar" })
+        for (String name : new String[] { "api.jar" })
             try (InputStream is = getClass().getClassLoader().getResourceAsStream("META-INF/jars/" + name)) {
                 Files.copy(Objects.requireNonNull(is), new File(jarsDir, "fletchingtable-" + name).toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException | NullPointerException e) {

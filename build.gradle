@@ -36,13 +36,11 @@ task apiJar(type: Jar) {
     include "io/shcm/shsupercm/fabric/fletchingtable/api/**"
 }
 
-evaluationDependsOn ':shutupdrasil'
 jar.dependsOn(apiJar)
 
 jar {
     into("META-INF/jars") {
         from apiJar
-        from tasks.getByPath(':shutupdrasil:remapJar').outputs
     }
 }
 
