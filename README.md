@@ -16,6 +16,14 @@ Automatically registers mixins into the project's mixin jsons.
 Mixin environments can be overridden by annotating the mixin with `@MixinEnvironment`.
 You can set mixins to be registered automatically without MixinEnvironment by changing the `defaultMixinEnvironment` in the settings.
 
+### Interface Injections
+Registers interface injections automatically on mixins/interfaces annotated with `@InterfaceInjection`.
+
+By default either the interface or the mixin implementing it have to be annotated with `@InterfaceInjection`.
+You can change the default setting to always try to register interface injections in the fletchingTable settings block.
+The mixin annotation overrides the default setting and the interface's annotation overrides the mixin's setting.
+Automatic mixins must be turned on to use this feature.
+
 ### Included Jars
 Exposes jars that were included in dependencies with Loom's `include` configuration.
 
@@ -64,6 +72,8 @@ fletchingTable {
     autoMixinEnvironmentClientPrefix = "net.minecraft.client" //default
     // Sets the prefix required for mixin targets to set the "auto" environment to "server"
     autoMixinEnvironmentServerPrefix = "null" //default
+    // Sets the default behavior for interface injections
+    enableAutoInterfaceInjections = false //default
 }
 ```
 
@@ -73,7 +83,7 @@ Add the plugin by applying it <ins>**after loom**</ins>.
 ```patch
 plugins {
     id 'fabric-loom' ...
-+   id "io.shcm.shsupercm.fabric.fletchingtable" version "1.5"
++   id "io.shcm.shsupercm.fabric.fletchingtable" version "1.6"
 }
 ```
 
@@ -81,7 +91,6 @@ plugins {
 Look at the [commits](https://github.com/SHsuperCM/FletchingTable/commits) for a changelog.
 
 ## Planned
- - Automatic interface injections registry
  - ~~Kotlin support~~ (only if I somehow find the time, kotlin is cursed af)
 
 ## About Fletching Table
