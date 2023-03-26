@@ -36,6 +36,11 @@ public abstract class FletchingTableExtension {
     public abstract Property<Boolean> getEnableMixins();
 
     /**
+     * Enables automatic interface injections. Requires #enableMixins.
+     */
+    public abstract Property<Boolean> getEnableAutoInterfaceInjections();
+
+    /**
      * Sets the default mixin environment when not overridden by @MixinEnvironment.<br>
      * "mixins" will process mixins for both sides, "client" will process mixins as client mixins, "server" will process mixins as server mixins.
      * "none"(default) will ignore mixins entirely. "auto" will put everything in "mixins" unless one of the targets matches a client/server prefix.
@@ -57,6 +62,7 @@ public abstract class FletchingTableExtension {
 
         getEnableEntrypoints().convention(true);
         getEnableMixins().convention(true);
+        getEnableAutoInterfaceInjections().convention(false);
 
         getDefaultMixinEnvironment().convention("none");
         getAutoMixinEnvironmentClientPrefix().convention("net.minecraft.client");
@@ -68,6 +74,7 @@ public abstract class FletchingTableExtension {
 
         compilerArgs.add("-Afletchingtable.entrypoints=" + getEnableEntrypoints().get());
         compilerArgs.add("-Afletchingtable.mixins=" + getEnableMixins().get());
+        compilerArgs.add("-Afletchingtable.mixins.interfaceinjection=" + getEnableAutoInterfaceInjections().get());
         compilerArgs.add("-Afletchingtable.mixins.default=" + getDefaultMixinEnvironment().get());
         compilerArgs.add("-Afletchingtable.mixins.prefix.client=" + getAutoMixinEnvironmentClientPrefix().get());
         compilerArgs.add("-Afletchingtable.mixins.prefix.server=" + getAutoMixinEnvironmentServerPrefix().get());

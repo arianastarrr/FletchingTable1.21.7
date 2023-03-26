@@ -66,9 +66,12 @@ public class FTGradlePlugin implements Plugin<Project> {
                 for (Task classes : project.getTasksByName("classes", false))
                     classes.doLast("ftEntrypoints", this::entrypoints);
 
-            if (fletchingTableExtension.getEnableMixins().get())
-                for (Task classes : project.getTasksByName("classes", false))
+            if (fletchingTableExtension.getEnableMixins().get()) {
+                for (Task classes : project.getTasksByName("classes", false)) {
                     classes.doLast("ftMixins", this::mixins);
+                    classes.doLast("ftInterfaceInjections", this::interfaceInjections);
+                }
+            }
         }
     }
 
@@ -134,7 +137,7 @@ public class FTGradlePlugin implements Plugin<Project> {
                             gson.toJson(modJson, writer);
                         }
                     } catch (IOException e) {
-                        task.getProject().getLogger().debug("Errored while inserting entrypoints.", e);
+                        task.getProject().getLogger().error("Errored while inserting entrypoints.", e);
                     }
                 }
             }
@@ -236,10 +239,79 @@ public class FTGradlePlugin implements Plugin<Project> {
                         }
 
                     } catch (Exception e) {
-                        task.getProject().getLogger().debug("Errored while inserting mixins.", e);
+                        task.getProject().getLogger().error("Errored while inserting mixins.", e);
                     }
                 }
             }
     }
 
+    private void interfaceInjections(Task task) {
+        final ClassNameMapping mapping;
+        try {
+            mapping = new ClassNameMapping(task.getProject());
+        } catch (IOException e) {
+            task.getProject().getLogger().error("Errored while reading mappings.", e);
+            return;
+        }
+        for (SourceSet sourceSet : task.getProject().getExtensions().getByType(JavaPluginExtension.class).getSourceSets())
+            for (File resourcesDir : sourceSet.getResources().getSrcDirs()) {
+                File jsonFile = new File(sourceSet.getOutput().getResourcesDir(), "fabric.mod.json");
+                if (!jsonFile.exists())
+                    continue;
+
+                for (File generatedSourcesDir : sourceSet.getOutput().getGeneratedSourcesDirs()) {
+                    File interfaceInjectionsFile = new File(generatedSourcesDir, "fletchingtable/interfaceinjections.txt");
+                    if (!interfaceInjectionsFile.exists())
+                        continue;
+
+                    final Map<String, Set<String>> interfaceInjections = new HashMap<>();
+
+                    try {
+                        JsonObject modJson;
+                        try (FileReader fileReader = new FileReader(jsonFile)) {
+                            modJson = JsonParser.parseReader(fileReader).getAsJsonObject();
+                        }
+
+                        JsonObject jCustom = modJson.getAsJsonObject("custom");
+                        if (jCustom == null)
+                            modJson.add("custom", jCustom = new JsonObject());
+
+                        JsonObject jInterfaceInjections = jCustom.getAsJsonObject("loom:injected_interfaces");
+                        if (jInterfaceInjections == null)
+                            jCustom.add("loom:injected_interfaces", jInterfaceInjections = new JsonObject());
+
+                        for (Map.Entry<String, JsonElement> entry : jInterfaceInjections.entrySet()) {
+                            Set<String> ep = interfaceInjections.computeIfAbsent(entry.getKey(), s -> new LinkedHashSet<>());
+                            for (JsonElement element : entry.getValue().getAsJsonArray())
+                                ep.add(element.getAsString());
+                        }
+
+                        Files.lines(interfaceInjectionsFile.toPath(), StandardCharsets.UTF_8)
+                                .forEachOrdered(line -> {
+                                    if (!line.isEmpty()) {
+                                        int i = line.indexOf(' ');
+                                        interfaceInjections.computeIfAbsent(mapping.remap(line.substring(i + 1)), s -> new LinkedHashSet<>()).add(line.substring(0, i));
+                                    }
+                                });
+
+                        for (Map.Entry<String, Set<String>> entry : interfaceInjections.entrySet()) {
+                            JsonArray ep = new JsonArray();
+
+                            for (String s : entry.getValue())
+                                ep.add(s);
+
+                            jInterfaceInjections.add(entry.getKey(), ep);
+                        }
+
+                        Gson gson = new Gson();
+                        try (FileWriter fileWriter = new FileWriter(jsonFile); JsonWriter writer = gson.newJsonWriter(fileWriter)) {
+                            writer.setIndent("    ");
+                            gson.toJson(modJson, writer);
+                        }
+                    } catch (IOException e) {
+                        task.getProject().getLogger().error("Errored while inserting interface injections.", e);
+                    }
+                }
+            }
+    }
 }

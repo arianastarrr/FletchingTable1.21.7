@@ -31,10 +31,16 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
+
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/test-mod.accesswidener")
 }
 
 fletchingTable {
 	defaultMixinEnvironment = "auto"
+	enableAutoInterfaceInjections = true
 }
 
 

@@ -1,6 +1,7 @@
 package io.shcm.shsupercm.fabric.fletchingtable;
 
 import io.shcm.shsupercm.fabric.fletchingtable.api.Entrypoint;
+import io.shcm.shsupercm.fabric.fletchingtable.api.InterfaceInjection;
 import io.shcm.shsupercm.fabric.fletchingtable.api.MixinEnvironment;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -10,18 +11,19 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypesException;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class FTAnnotationProcessor extends AbstractProcessor {
-    private Writer writerEntrypoints = null, writerMixins = null;
+    private Writer writerEntrypoints = null, writerMixins = null, writerInterfaceInjections = null;
     private String defaultMixinEnvironment, autoMixinClientPrefix, autoMixinServerPrefix;
+    private boolean defaultMixinInterfaceInjections;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -37,6 +39,9 @@ public class FTAnnotationProcessor extends AbstractProcessor {
                 file = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "fletchingtable", "mixins.txt");
                 file.delete();
                 writerMixins = file.openWriter();
+                file = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "fletchingtable", "interfaceinjections.txt");
+                file.delete();
+                writerInterfaceInjections = file.openWriter();
 
                 defaultMixinEnvironment = processingEnv.getOptions().get("fletchingtable.mixins.default");
 
@@ -46,6 +51,8 @@ public class FTAnnotationProcessor extends AbstractProcessor {
                 autoMixinServerPrefix = processingEnv.getOptions().get("fletchingtable.mixins.prefix.server");
                 if (autoMixinServerPrefix.equals("null"))
                     autoMixinServerPrefix = null;
+
+                defaultMixinInterfaceInjections = processingEnv.getOptions().get("fletchingtable.mixins.interfaceinjection").equalsIgnoreCase("true");
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -66,8 +73,10 @@ public class FTAnnotationProcessor extends AbstractProcessor {
             types.add("io.shcm.shsupercm.fabric.fletchingtable.api.Entrypoint");
         }
 
-        if (writerMixins != null)
+        if (writerMixins != null) {
             types.add("org.spongepowered.asm.mixin.Mixin");
+            types.add("io.shcm.shsupercm.fabric.fletchingtable.api.InterfaceInjection");
+        }
 
         return types;
     }
@@ -81,6 +90,7 @@ public class FTAnnotationProcessor extends AbstractProcessor {
         options.add("fletchingtable.mixins.default");
         options.add("fletchingtable.mixins.prefix.client");
         options.add("fletchingtable.mixins.prefix.server");
+        options.add("fletchingtable.mixins.interfaceinjection");
 
         return options;
     }
@@ -111,8 +121,16 @@ public class FTAnnotationProcessor extends AbstractProcessor {
                 if (roundEnv.processingOver()) {
                     writerMixins.close();
                     writerMixins = null;
-                } else
+                    if (writerInterfaceInjections != null) {
+                        writerInterfaceInjections.close();
+                        writerInterfaceInjections = null;
+                    }
+                } else {
                     writerMixins.flush();
+                    if (writerInterfaceInjections != null) {
+                        writerInterfaceInjections.flush();
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,6 +174,35 @@ public class FTAnnotationProcessor extends AbstractProcessor {
                     .append(" ")
                     .append(environment)
                     .append("\n");
+
+        if (writerInterfaceInjections != null) {
+            Mixin mixin = element.getAnnotation(Mixin.class);
+            List<String> targets = new ArrayList<>(Arrays.asList(mixin.targets()));
+            try {
+                mixin.value();
+            } catch (MirroredTypesException mirrored) {
+                for (TypeMirror typeMirror : mirrored.getTypeMirrors())
+                    targets.add(processingEnv.getElementUtils().getBinaryName((TypeElement) processingEnv.getTypeUtils().asElement(typeMirror)).toString());
+            }
+            targets.replaceAll(target -> target.replace('.', '/'));
+
+            InterfaceInjection mixinInterfaceInjection = element.getAnnotation(InterfaceInjection.class);
+            boolean inject = mixinInterfaceInjection == null ? defaultMixinInterfaceInjections : mixinInterfaceInjection.value();
+
+            for (TypeMirror interfaceMirror : ((TypeElement) element).getInterfaces()) {
+                InterfaceInjection interfaceInterfaceInjection = processingEnv.getTypeUtils().asElement(interfaceMirror).getAnnotation(InterfaceInjection.class);
+                if (interfaceInterfaceInjection == null ? inject : interfaceInterfaceInjection.value()) {
+                    String interfaceName = processingEnv.getElementUtils().getBinaryName((TypeElement) processingEnv.getTypeUtils().asElement(interfaceMirror)).toString().replace('.', '/');
+
+                    for (String target : targets)
+                        writerInterfaceInjections
+                                .append(interfaceName)
+                                .append(" ")
+                                .append(target)
+                                .append("\n");
+                }
+            }
+        }
     }
 
     public void processEntrypoint(Element element, String entrypoint) throws IOException {

@@ -1,16 +1,17 @@
 {
-	"schemaVersion": 1,
-	"id": "test-mod",
-	"version": "${version}",
-	"name": "Test Mod",
-	"description": "",
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "CC0-1.0",
-	"environment": "*",
-	"mixins": [
-		"test-mod.mixins.json"
-	]
+    "schemaVersion": 1,
+    "id": "test-mod",
+    "version": "${version}",
+    "name": "Test Mod",
+    "description": "",
+    "contact": {
+        "homepage": "https://fabricmc.net/",
+        "sources": "https://github.com/FabricMC/fabric-example-mod"
+    },
+    "accessWidener": "test-mod.accesswidener",
+    "license": "CC0-1.0",
+    "environment": "*",
+    "mixins": [
+        "test-mod.mixins.json"
+    ]
 }
