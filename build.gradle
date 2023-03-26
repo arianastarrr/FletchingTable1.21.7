@@ -14,7 +14,7 @@ repositories {
     gradlePluginPortal()
 }
 
-version = '1.6-SNAPSHOT'
+version = '1.6'
 group = 'io.shcm.shsupercm.fabric'
 
 gradlePlugin {
