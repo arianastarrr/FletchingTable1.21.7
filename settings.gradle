@@ -10,4 +10,4 @@ pluginManagement {
 
 rootProject.name = 'FletchingTable'
 
-include ':testmod'
+//include ':testmod'//

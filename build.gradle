@@ -37,7 +37,7 @@ dependencies {
 }
 
 task apiJar(type: Jar) {
-    archiveName "api.jar"
+    archiveFileName = "api.jar"
 
     from sourceSets.main.output
     from sourceSets.main.java.getSrcDirs()
